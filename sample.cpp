@@ -1,5 +1,5 @@
 // compile against libStructure and opencv
-// g++ cobast.cpp -I/opt/StructureSDK-CrossPlatform-0.7.3-ROS/Libraries/Structure/Headers/ -lStructure `pkg-config opencv --libs`
+// g++ sample.cpp -I/opt/StructureSDK-CrossPlatform-0.7.3-ROS/Libraries/Structure/Headers/ -lStructure `pkg-config opencv --libs`
 
 #include <ST/CaptureSession.h>
 #include <ST/CameraFrames.h>
@@ -67,17 +67,20 @@ struct SessionDelegate: ST::CaptureSessionDelegate {
       // here is the actual work
       //printf("Synchronized frames: depth %dx%d visible %dx%d infrared %dx%d\n", sample.depthFrame.width(), sample.depthFrame.height(), sample.visibleFrame.width(), sample.visibleFrame.height(), sample.infraredFrame.width(), sample.infraredFrame.height());
       if (sample.depthFrame.isValid()) {
+		  if (frametimeCurrent[0] != sample.depthFrame.timestamp()){
         frametimeCurrent[0] = sample.depthFrame.timestamp();
         currentDepthFrame = sample.depthFrame;
-      }
+      }}
       if (sample.visibleFrame.isValid()) {
+        if (frametimeCurrent[1] != sample.visibleFrame.timestamp()){
         frametimeCurrent[1] = sample.visibleFrame.timestamp();
         currentVisibleFrame = sample.visibleFrame;
-      }
-      if (sample.infraredFrame.isValid()) {
+      }}
+   /*   if (sample.infraredFrame.isValid()) {
+        if (frametimeCurrent[2] != sample.infraredFrame.timestamp()){
         frametimeCurrent[2] = sample.infraredFrame.timestamp();
         currentInfraredFrame = sample.infraredFrame;
-      }
+      }}*/
       break;
     default:
       break;
@@ -90,7 +93,7 @@ int main(int argc, char **argv){
     settings.source = ST::CaptureSessionSourceId::StructureCore;
     settings.structureCore.depthEnabled = true;
     settings.structureCore.visibleEnabled = true;
-    settings.structureCore.infraredEnabled = true;
+    settings.structureCore.infraredEnabled = false; // ~8 fps on Jetson when turned off 
     settings.structureCore.accelerometerEnabled = true;
     settings.structureCore.gyroscopeEnabled = true;
     settings.structureCore.depthResolution = ST::StructureCoreDepthResolution::SXGA;
