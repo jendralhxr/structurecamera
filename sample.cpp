@@ -9,8 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <opencv4/opencv2/opencv.hpp>
-
+#include <opencv2/opencv.hpp>
+#include <sys/time.h>
 
 ST::DepthFrame currentDepthFrame;
 ST::ColorFrame currentVisibleFrame;
@@ -27,6 +27,8 @@ cv::Mat depth(DEPTH_HEIGHT, DEPTH_WIDTH, CV_16UC1);
 cv::Mat depth2(DEPTH_HEIGHT, DEPTH_WIDTH, CV_8UC4);
 
 double frametimePast[3]={1,1,1}, frametimeCurrent[3];
+struct timeval start, stop;
+unsigned int frames_count;
 
 struct SessionDelegate: ST::CaptureSessionDelegate {
   void captureSessionEventDidOccur(ST::CaptureSession * session, ST::CaptureSessionEventId event) override {
@@ -85,7 +87,10 @@ struct SessionDelegate: ST::CaptureSessionDelegate {
     default:
       break;
     }
+    gettimeofday(&stop,NULL);
+    frames_count++;
   }
+  
 };
 
 int main(int argc, char **argv){
@@ -109,7 +114,8 @@ int main(int argc, char **argv){
 
 	while(status){}
 	sleep(1); // just to make sure all the frames are ready
-	
+
+	gettimeofday(&start,NULL);
     while (true) {
 		if (frametimeCurrent[0] != frametimePast[0]) {
 			frametimePast[0] = frametimeCurrent[0];
@@ -129,6 +135,12 @@ int main(int argc, char **argv){
 			frametimePast[2] = frametimeCurrent[2];
 			//printf("%f infrared %dx%d\n", currentVisibleFrame.timestamp(), currentInfraredFrame.width(), currentInfraredFrame.height());
 		}
+		// update fps counter every second
+		if ((1e6*(stop.tv_sec-start.tv_sec) +stop.tv_usec -start.tv_usec) > 1e6){
+			printf("fps: %d\n", frames_count);
+			gettimeofday(&start,NULL);
+			frames_count= 0;
+			}
 		cv::waitKey(1);
 	}
 }
