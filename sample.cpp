@@ -77,6 +77,8 @@ struct SessionDelegate: ST::CaptureSessionDelegate {
         if (frametimeCurrent[1] != sample.visibleFrame.timestamp()){
         frametimeCurrent[1] = sample.visibleFrame.timestamp();
         currentVisibleFrame = sample.visibleFrame;
+        gettimeofday(&stop,NULL);
+		frames_count++;
       }}
    /*   if (sample.infraredFrame.isValid()) {
         if (frametimeCurrent[2] != sample.infraredFrame.timestamp()){
@@ -87,8 +89,7 @@ struct SessionDelegate: ST::CaptureSessionDelegate {
     default:
       break;
     }
-    gettimeofday(&stop,NULL);
-    frames_count++;
+    
   }
   
 };
