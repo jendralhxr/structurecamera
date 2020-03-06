@@ -25,6 +25,8 @@ char status=1;
 cv::Mat display(VISIBLE_HEIGHT, VISIBLE_WIDTH, CV_8UC3);
 cv::Mat depth(DEPTH_HEIGHT, DEPTH_WIDTH, CV_16UC1);
 cv::Mat depth2(DEPTH_HEIGHT, DEPTH_WIDTH, CV_8UC4);
+unsigned short int depthmm[DEPTH_HEIGHT*DEPTH_WIDTH];
+float depthf[DEPTH_HEIGHT*DEPTH_WIDTH], depthf2[DEPTH_HEIGHT*DEPTH_WIDTH];
 
 double frametimePast[3]={1,1,1}, frametimeCurrent[3];
 struct timeval start, stop;
@@ -104,7 +106,11 @@ int main(int argc, char **argv){
     settings.structureCore.gyroscopeEnabled = true;
     settings.structureCore.depthResolution = ST::StructureCoreDepthResolution::SXGA;
     settings.structureCore.imuUpdateRate = ST::StructureCoreIMUUpdateRate::AccelAndGyro_200Hz;
-
+	settings.applyExpensiveCorrection = true;
+	//settings.structureCore.depthRangeMode, ST::StructureCoreDepthRangeMode::VeryLong;
+	settings.structureCore.depthRangeMode, ST::StructureCoreDepthRangeMode::BodyScanning;
+	
+    
     SessionDelegate delegate;
     ST::CaptureSession session;
     session.setDelegate(&delegate);
@@ -121,6 +127,9 @@ int main(int argc, char **argv){
 		if (frametimeCurrent[0] != frametimePast[0]) {
 			frametimePast[0] = frametimeCurrent[0];
 			memcpy(depth2.data, currentDepthFrame.convertDepthToRgba() ,sizeof(uchar) * DEPTH_WIDTH * DEPTH_HEIGHT * 4); //16-bit
+			memcpy(depthf, currentDepthFrame.depthInMeters(), DEPTH_HEIGHT * DEPTH_WIDTH  * sizeof(float));
+			memcpy(depthf2, currentDepthFrame.depthInMillimeters(), DEPTH_HEIGHT * DEPTH_WIDTH  * sizeof(float));
+			printf("depth at (%d %d) is %f m or %f mm\n", 540, 480, depthf[1280*480+540], depthf2[1280*480+540]);
 			cv::imshow("depth", depth2);
 			//memcpy(depth.data, currentDepthFrame.convertDepthToUShortInMillimeters() ,sizeof(uint16_t) * DEPTH_WIDTH * DEPTH_HEIGHT); //16-bit
 			//printf("%f depth %dx%d\n", currentDepthFrame.timestamp(), currentDepthFrame.width(), currentDepthFrame.height());
@@ -130,7 +139,7 @@ int main(int argc, char **argv){
 			//printf("%f visible %dx%d\n", currentVisibleFrame.timestamp(), currentVisibleFrame.width(), currentVisibleFrame.height());
 			memcpy(display.data, currentVisibleFrame.rgbData(), sizeof(uchar) * VISIBLE_WIDTH * VISIBLE_HEIGHT * 3); // RGB
 			cvtColor(display, display, cv::COLOR_RGB2BGR);
-			cv::imshow("visible", display);
+			//cv::imshow("visible", display);
 		}
 		if (frametimeCurrent[2] != frametimePast[2]) {
 			frametimePast[2] = frametimeCurrent[2];
