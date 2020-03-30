@@ -15,6 +15,7 @@
 ST::DepthFrame currentDepthFrame;
 ST::ColorFrame currentVisibleFrame;
 ST::InfraredFrame currentInfraredFrame;
+ST::Intrinsics a, b, c;
 
 #define VISIBLE_HEIGHT 480
 #define VISIBLE_WIDTH 640
@@ -107,8 +108,8 @@ int main(int argc, char **argv){
     settings.structureCore.depthResolution = ST::StructureCoreDepthResolution::SXGA;
     settings.structureCore.imuUpdateRate = ST::StructureCoreIMUUpdateRate::AccelAndGyro_200Hz;
 	settings.applyExpensiveCorrection = true;
-	//settings.structureCore.depthRangeMode, ST::StructureCoreDepthRangeMode::VeryLong;
-	settings.structureCore.depthRangeMode, ST::StructureCoreDepthRangeMode::BodyScanning;
+	settings.structureCore.depthRangeMode, ST::StructureCoreDepthRangeMode::VeryLong;
+	//settings.structureCore.depthRangeMode, ST::StructureCoreDepthRangeMode::BodyScanning;
 	
     
     SessionDelegate delegate;
@@ -131,15 +132,18 @@ int main(int argc, char **argv){
 			memcpy(depthf2, currentDepthFrame.depthInMillimeters(), DEPTH_HEIGHT * DEPTH_WIDTH  * sizeof(float));
 			printf("depth at (%d %d) is %f m or %f mm\n", 540, 480, depthf[1280*480+540], depthf2[1280*480+540]);
 			cv::imshow("depth", depth2);
+			a= currentDepthFrame.intrinsics();
+			printf("depth intrinsic [px]: x%f y%f\n",a.fx, a.fy);
 			//memcpy(depth.data, currentDepthFrame.convertDepthToUShortInMillimeters() ,sizeof(uint16_t) * DEPTH_WIDTH * DEPTH_HEIGHT); //16-bit
-			//printf("%f depth %dx%d\n", currentDepthFrame.timestamp(), currentDepthFrame.width(), currentDepthFrame.height());
 		}
 		if (frametimeCurrent[1] != frametimePast[1]) {
 			frametimePast[1] = frametimeCurrent[1];
-			//printf("%f visible %dx%d\n", currentVisibleFrame.timestamp(), currentVisibleFrame.width(), currentVisibleFrame.height());
 			memcpy(display.data, currentVisibleFrame.rgbData(), sizeof(uchar) * VISIBLE_WIDTH * VISIBLE_HEIGHT * 3); // RGB
 			cvtColor(display, display, cv::COLOR_RGB2BGR);
-			//cv::imshow("visible", display);
+			cv::imshow("visible", display);
+			b= currentVisibleFrame.intrinsics();
+			printf("visible intrinsic [px]: x%f y%f\n", b.fx, b.fy);
+			
 		}
 		if (frametimeCurrent[2] != frametimePast[2]) {
 			frametimePast[2] = frametimeCurrent[2];
